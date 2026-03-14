@@ -288,6 +288,72 @@ async def cognee_cognify() -> str:
 
 
 
+@mcp.tool(
+    name="cognee_search",
+    annotations={
+        "title": "Search Cognee Knowledge Graph",
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+async def cognee_search(params: CogneeSearchInput) -> str:
+    """Search the Cognee knowledge graph for information.
+
+    Queries the knowledge graph built from previously ingested data.
+    Returns relevant results based on semantic similarity and graph
+    relationships.
+
+    Prerequisites:
+        - Data must have been added via cognee_add
+        - Knowledge graph must have been built via cognee_cognify
+
+    Args:
+        params (CogneeSearchInput): Validated input containing:
+            - query (str): Natural language search query (1-1000 chars)
+            - response_format (str): 'markdown' or 'json' (default: markdown)
+
+    Returns:
+        str: Search results formatted per response_format.
+
+    Examples:
+        - "What GPU does the system have?"
+        - "What actions are forbidden?"
+        - "What is the current project?"
+    """
+    try:
+        from cognee.api.v1.search import SearchType
+
+        results = await cognee.search(
+            query_text=params.query,
+            query_type=SearchType.SUMMARIES,
+        )
+
+        if not results:
+            return json.dumps({"status": "ok", "results": [], "message": "No results found."})
+
+        formatted = []
+        for r in results[:10]:
+            if isinstance(r, dict):
+                formatted.append(r.get("text", str(r)))
+            else:
+                formatted.append(str(r))
+
+        if params.response_format == ResponseFormat.JSON:
+            return _truncate_response(json.dumps({
+                "status": "ok",
+                "query": params.query,
+                "results": formatted,
+            }, indent=2))
+        else:
+            lines = [f"## Search Results for: *{params.query}*\n"]
+            for i, item in enumerate(formatted, 1):
+                lines.append(f"{i}. {item}")
+            return _truncate_response("\n".join(lines))
+
+    except Exception as e:
+        return _handle_cognee_error(e)
 
 
 @mcp.tool(
