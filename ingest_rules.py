@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 load_dotenv(Path(__file__).parent / ".env")
 
 import cognee
+from cognee.api.v1.search import SearchType
 
 
 async def ingest_rules():
@@ -27,7 +28,7 @@ async def ingest_rules():
     print("✅ Knowledge graph built!")
 
     print("\n🔍 Testing search: 'What GPU does the system have?'")
-    results = await cognee.search("INSIGHTS", query_text="What GPU does the system have?")
+    results = await cognee.search(query_text="What GPU does the system have?", query_type=SearchType.SUMMARIES)
     if results:
         for r in results[:3]:
             print(f"  → {r}")
