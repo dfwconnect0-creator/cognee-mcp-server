@@ -1,0 +1,25 @@
+[Unit]
+Description=Cognee Knowledge Engine REST API
+Documentation=https://docs.cognee.ai
+After=network.target docker.service ollama.service
+Wants=docker.service
+
+[Service]
+Type=simple
+User=%i
+WorkingDirectory=%h/Desktop/install/cognee
+Environment=PATH=%h/Desktop/install/cognee/.venv/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/Desktop/install/cognee/.venv/bin/python -m cognee.api.server
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+# VRAM safety: ensure only 1 Ollama request at a time from Cognee
+Environment=OLLAMA_NUM_PARALLEL=1
+
+# Load .env file
+EnvironmentFile=%h/Desktop/install/cognee/.env
+
+[Install]
+WantedBy=default.target

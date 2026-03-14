@@ -1,0 +1,24 @@
+[Unit]
+Description=Ollama VRAM-Safe Configuration
+Documentation=https://ollama.ai
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/ollama serve
+
+# VRAM Safety for RTX 3060 Ti (8GB)
+# Only allow 1 model loaded at a time to prevent OOM
+Environment=OLLAMA_NUM_PARALLEL=1
+# Unload models after 5 minutes of idle
+Environment=OLLAMA_KEEP_ALIVE=5m
+# Maximum models loaded simultaneously
+Environment=OLLAMA_MAX_LOADED_MODELS=1
+
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target
